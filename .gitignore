@@ -179,3 +179,17 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# --- Custom project-specific ignores ---
+
+# Local SQLite database
+*.db
+
+# Flask instance config folder
+instance/
+
+# Local environment variables
+.env
+
+# VSCode workspace settings (if using VSCode)
+.vscode/
