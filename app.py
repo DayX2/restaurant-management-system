@@ -1,15 +1,13 @@
 from flask import Flask, jsonify
+import sqlite3
 
 app = Flask(__name__)
 
-# Menü verileri
-MENU_ITEMS = [
-    {"id": 1, "name": "Adana Kebab", "price": 41, "category": "kebab"},
-    {"id": 2, "name": "Döner Kebab", "price": 35, "category": "kebab"},
-    {"id": 3, "name": "Mercimek Çorbası", "price": 15, "category": "soup"},
-    {"id": 4, "name": "Mantı", "price": 25, "category": "pasta"},
-    {"id": 5, "name": "Haydari", "price": 10, "category": "appetizer"},
-]
+def get_db_connection():
+    conn = sqlite3.connect('restaurant.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 @app.route('/')
 def home():
@@ -19,6 +17,7 @@ def home():
         "day": 1,
         "date": "October 6, 2025"
     })
+
 
 @app.route('/api/health')
 def health():
@@ -30,17 +29,39 @@ def health():
 
 @app.route('/api/menu')
 def get_menu():
+    conn = get_db_connection() 
+    menu_items = conn.execute("SELECT * FROM menu_items WHERE available = 1").fetchall() 
+
+    items = []
+    for item in menu_items: 
+        items.append({
+            'id': item['id'],
+            'name': item['name'],
+            'description': item['description'],
+            'price': item['price'],
+            'category': item['category']
+        })
+
     return jsonify({
-        "total": len(MENU_ITEMS),
-        "items": MENU_ITEMS
+        "total": len(items),
+        "items": items  
     })
 
 
 @app.route('/api/menu/<int:item_id>')
 def get_menu_item(item_id):
-    item = next((item for item in MENU_ITEMS if item["id"] == item_id), None)
+    conn = get_db_connection()
+    item = conn.execute('SELECT * FROM menu_items WHERE id = ?', (item_id,)).fetchone()
+    conn.close()
+
     if item:
-        return jsonify(item)
+        return jsonify({
+            'id': item['id'],
+            'name': item['name'],
+            'description': item['description'],
+            'price': item['price'],
+            'category': item['category']
+        })
     else:
         return jsonify({"error": "Item not found"}), 404
 
